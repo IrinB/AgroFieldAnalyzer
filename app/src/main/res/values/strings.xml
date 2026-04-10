@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Агромон</string>
+    <string name="take_photo_button_alias">Сфотографировать поле</string>
+</resources>

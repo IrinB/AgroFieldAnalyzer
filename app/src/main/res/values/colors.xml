@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="agro_green">#2E7D32</color>        <!-- Темно-зеленый, виден на солнце -->
+    <color name="agro_dark_green">#1B5E20</color>   <!-- Для текста -->
+    <color name="agro_green_light">#C8E6C9</color>  <!-- Для обводок -->
+    <color name="agro_earth">#795548</color>        <!-- Коричневый для акцентов земли -->
+
+    <color name="white">#FFFFFF</color>
+    <color name="black">#212121</color>
+</resources>

@@ -1,0 +1,6 @@
+<resources>
+    <style name="Base.Theme.AgroFieldAnalyzer" parent="Theme.Material3.DayNight.NoActionBar">
+    </style>
+
+    <style name="Theme.AgroFieldAnalyzer" parent="Base.Theme.AgroFieldAnalyzer" />
+</resources>
