@@ -129,7 +129,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Рассчитать густоту"
-                android:textColor="@color/agro_green"
+                android:textColor="@color/success"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -227,9 +227,9 @@
                 android:layout_weight="1"
                 android:text="+"
                 android:textSize="48sp"
-                android:textColor="@color/agro_green"
+                android:textColor="@color/success"
                 app:cornerRadius="16dp"
-                app:strokeColor="@color/agro_green"
+                app:strokeColor="@color/success"
                 app:strokeWidth="2dp"
                 android:backgroundTint="@color/white" />
 
@@ -249,7 +249,7 @@
             android:textAllCaps="false"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:backgroundTint="@color/agro_green"
+            android:backgroundTint="@color/success"
             android:textColor="@color/white"
             app:cornerRadius="32dp"
             android:layout_marginTop="16dp" />
@@ -263,7 +263,7 @@
             android:textAllCaps="false"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:backgroundTint="#D32F2F"
+            android:backgroundTint="@color/error"
             android:textColor="@color/white"
             app:cornerRadius="32dp" />
 
