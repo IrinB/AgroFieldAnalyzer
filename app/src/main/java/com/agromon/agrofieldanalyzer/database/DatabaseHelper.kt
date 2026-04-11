@@ -10,7 +10,7 @@ class DatabaseHelper(context: Context) :
 
     companion object {
         private const val DATABASE_NAME = "agro_fields.db"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_VERSION = 2
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -24,11 +24,11 @@ class DatabaseHelper(context: Context) :
         onCreate(db)
     }
 
-    fun getFieldTableHelper(): FieldTable {
+    fun getFieldTable(): FieldTable {
         return FieldTable(writableDatabase)
     }
 
-    fun getPhotoTableHelper(): PhotoTable {
+    fun getPhotoTable(): PhotoTable {
         return PhotoTable(writableDatabase)
     }
 

@@ -14,6 +14,7 @@ class FieldTable(db: SQLiteDatabase) : BaseTable(db) {
         const val COLUMN_EXCLUDED_AREA = "excluded_area"
         const val COLUMN_LAST_CAPTURE = "last_capture"
         const val COLUMN_CREATED_AT = "created_at"
+        const val COLUMN_DELETED_AT = "deleted_at"
 
         // SQL для создания таблицы
         val CREATE_TABLE = """
@@ -24,7 +25,8 @@ class FieldTable(db: SQLiteDatabase) : BaseTable(db) {
                 $COLUMN_ROW_SPACING REAL DEFAULT 0,
                 $COLUMN_EXCLUDED_AREA REAL DEFAULT 0,
                 $COLUMN_LAST_CAPTURE TEXT,
-                $COLUMN_CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                $COLUMN_CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                $COLUMN_DELETED_AT TIMESTAMP DEFAULT NULL
             )
         """.trimIndent()
     }
@@ -64,13 +66,20 @@ class FieldTable(db: SQLiteDatabase) : BaseTable(db) {
             TABLE_NAME,
             arrayOf(COLUMN_ID, COLUMN_NAME, COLUMN_AREA, COLUMN_ROW_SPACING,
                 COLUMN_EXCLUDED_AREA, COLUMN_LAST_CAPTURE),
-            null, null, null, null,
+            "$COLUMN_DELETED_AT IS NULL",
+            null, null, null,
             "$COLUMN_CREATED_AT DESC"
         )
 
         val fields = mutableListOf<Field>()
         cursor.use {
             while (it.moveToNext()) {
+                val lastCaptureIndex = it.getColumnIndex(COLUMN_LAST_CAPTURE)
+                val lastCaptureDate = if (lastCaptureIndex >= 0 && !it.isNull(lastCaptureIndex)) {
+                    it.getString(lastCaptureIndex)
+                } else {
+                    null
+                }
                 fields.add(
                     Field(
                         id = it.getLongSafe(COLUMN_ID),
@@ -78,7 +87,7 @@ class FieldTable(db: SQLiteDatabase) : BaseTable(db) {
                         area = it.getDoubleSafe(COLUMN_AREA),
                         rowSpacing = it.getDoubleSafe(COLUMN_ROW_SPACING),
                         excludedArea = it.getDoubleSafe(COLUMN_EXCLUDED_AREA),
-                        lastCaptureDate = it.getStringSafe(COLUMN_LAST_CAPTURE).takeIf { date -> date.isNotEmpty() }
+                        lastCaptureDate
                     )
                 )
             }
@@ -99,13 +108,20 @@ class FieldTable(db: SQLiteDatabase) : BaseTable(db) {
 
         cursor.use {
             return if (it.moveToFirst()) {
+                val lastCaptureIndex = it.getColumnIndex(COLUMN_LAST_CAPTURE)
+                val lastCaptureDate = if (lastCaptureIndex >= 0 && !it.isNull(lastCaptureIndex)) {
+                    it.getString(lastCaptureIndex)
+                } else {
+                    null
+                }
+
                 Field(
                     id = it.getLongSafe(COLUMN_ID),
                     name = it.getStringSafe(COLUMN_NAME),
                     area = it.getDoubleSafe(COLUMN_AREA),
                     rowSpacing = it.getDoubleSafe(COLUMN_ROW_SPACING),
                     excludedArea = it.getDoubleSafe(COLUMN_EXCLUDED_AREA),
-                    lastCaptureDate = it.getStringSafe(COLUMN_LAST_CAPTURE).takeIf { date -> date.isNotEmpty() }
+                    lastCaptureDate
                 )
             } else {
                 null
@@ -127,16 +143,51 @@ class FieldTable(db: SQLiteDatabase) : BaseTable(db) {
         val fields = mutableListOf<Field>()
         cursor.use {
             while (it.moveToNext()) {
+                val lastCaptureIndex = it.getColumnIndex(COLUMN_LAST_CAPTURE)
+                val lastCaptureDate = if (lastCaptureIndex >= 0 && !it.isNull(lastCaptureIndex)) {
+                    it.getString(lastCaptureIndex)
+                } else {
+                    null
+                }
                 fields.add(
                     Field(
                         id = it.getLongSafe(COLUMN_ID),
                         name = it.getStringSafe(COLUMN_NAME),
                         area = it.getDoubleSafe(COLUMN_AREA),
-                        lastCaptureDate = it.getStringSafe(COLUMN_LAST_CAPTURE).takeIf { date -> date.isNotEmpty() }
+                        lastCaptureDate = lastCaptureDate
                     )
                 )
             }
         }
         return fields
+    }
+
+    fun softDelete(id: Long): Int {
+        val values = ContentValues().apply {
+            put(COLUMN_DELETED_AT, System.currentTimeMillis().toString())
+        }
+        return update(id, values)
+    }
+
+    fun restore(id: Long): Int {
+        val values = ContentValues().apply {
+            putNull(COLUMN_DELETED_AT)
+        }
+        return update(id, values)
+    }
+
+    fun hasPhotosOrAnalysis(id: Long): Boolean {
+        val cursor = db.rawQuery(
+            "SELECT COUNT(*) FROM ${PhotoTable.TABLE_NAME} WHERE ${PhotoTable.COLUMN_FIELD_ID} = ?",
+            arrayOf(id.toString())
+        )
+        val photoCount = cursor.use {
+            it.moveToFirst()
+            it.getInt(0)
+        }
+
+        // TODO: добавить проверку расчетов, когда будет таблица расчетов
+
+        return photoCount > 0
     }
 }

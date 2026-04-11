@@ -29,10 +29,10 @@
                 android:contentDescription="Назад" />
 
             <TextView
+                android:id="@+id/tvTitle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Создать поле"
                 android:textColor="@color/agro_dark_green"
                 android:textSize="28sp"
                 android:textStyle="bold" />
@@ -54,7 +54,7 @@
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:background="@drawable/edit_text_background"
-            android:hint="Тестовое поле с фото"
+            android:hint="Название поля"
             android:inputType="text"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
@@ -94,18 +94,22 @@
                 android:textColor="#757575"
                 android:textSize="18sp" />
 
-            <TextView
-                android:id="@+id/tvArea"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="300.0"
+            <EditText
+                android:id="@+id/etArea"
+                android:layout_width="120dp"
+                android:layout_height="24dp"
+                android:hint="0.0 га"
+                android:background="@drawable/edit_text_background"
+                android:inputType="numberDecimal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
                 android:textColor="@color/black"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:gravity="end" />
 
         </LinearLayout>
 
-        <!-- Густота стояния -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -146,14 +150,19 @@
                 android:textColor="#757575"
                 android:textSize="18sp" />
 
-            <TextView
-                android:id="@+id/tvRowSpacing"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="15.0"
+            <EditText
+                android:id="@+id/etRowSpacing"
+                android:layout_width="120dp"
+                android:layout_height="24dp"
+                android:background="@drawable/edit_text_background"
+                android:inputType="numberDecimal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:hint="0 см"
                 android:textColor="@color/black"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:gravity="end" />
 
         </LinearLayout>
 
@@ -172,14 +181,19 @@
                 android:textColor="#757575"
                 android:textSize="18sp" />
 
-            <TextView
-                android:id="@+id/tvExcludedArea"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0.0"
+            <EditText
+                android:id="@+id/etExcludedArea"
+                android:layout_width="120dp"
+                android:layout_height="24dp"
+                android:background="@drawable/edit_text_background"
+                android:inputType="numberDecimal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:hint="0.0 га"
                 android:textColor="@color/black"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:gravity="end" />
 
         </LinearLayout>
 
@@ -239,6 +253,19 @@
             android:textColor="@color/white"
             app:cornerRadius="32dp"
             android:layout_marginTop="16dp" />
+
+        <Button
+            android:id="@+id/btnDelete"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginTop="16dp"
+            android:text="Удалить поле"
+            android:textAllCaps="false"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:backgroundTint="#D32F2F"
+            android:textColor="@color/white"
+            app:cornerRadius="32dp" />
 
     </LinearLayout>
 </ScrollView>

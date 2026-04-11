@@ -7,18 +7,35 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.agromon.agrofieldanalyzer.adapter.FieldAdapter
+import com.agromon.agrofieldanalyzer.database.DatabaseHelper
 import com.agromon.agrofieldanalyzer.model.Field
+import com.google.android.material.button.MaterialButton
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var adapter: FieldAdapter
+    private lateinit var dbHelper: DatabaseHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        dbHelper = DatabaseHelper(this)
+
         setupRecyclerView()
-        loadTestData() // Временно, пока нет БД
+        loadFieldsFromDatabase()
+
+        findViewById<MaterialButton>(R.id.btnCreateField).setOnClickListener {
+            val intent = Intent(this, FieldDetailActivity::class.java).apply {
+                putExtra("field_id", 0L)
+            }
+            startActivity(intent)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadFieldsFromDatabase()
     }
 
     private fun setupRecyclerView() {
@@ -32,24 +49,17 @@ class MainActivity : AppCompatActivity() {
                 startActivity(intent)
             },
             onCameraClick = { field ->
-                // Открыть камеру для этого поля
                 openCameraForField(field)
             }
         )
-
-        findViewById<RecyclerView>(R.id.rvFields).apply {
-            adapter = this@MainActivity.adapter
-            layoutManager = LinearLayoutManager(this@MainActivity)
-        }
+        val recyclerView = findViewById<RecyclerView>(R.id.rvFields)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = adapter
     }
 
-    private fun loadTestData() {
-        val testFields = listOf(
-            Field(1, "Северное поле", 15.4),
-            Field(2, "Южное поле", 22.8),
-            Field(3, "Западное поле", 8.2)
-        )
-        adapter.submitList(testFields)
+    private fun loadFieldsFromDatabase() {
+        val fields = dbHelper.getFieldTable().getAll()
+        adapter.submitList(fields)
     }
 
     private fun openCameraForField(field: Field) {
