@@ -26,7 +26,6 @@
             android:id="@+id/tvFieldName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Северное поле"
             android:textColor="@color/agro_dark_green"
             android:textSize="22sp"
             android:textStyle="bold"
@@ -75,7 +74,6 @@
                 android:id="@+id/tvFieldSizeValue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="15 га"
                 android:textColor="#555555"
                 android:textSize="18sp"
                 android:textStyle="bold" />

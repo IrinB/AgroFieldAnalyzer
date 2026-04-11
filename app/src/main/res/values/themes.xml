@@ -1,5 +1,11 @@
 <resources>
     <style name="Base.Theme.AgroFieldAnalyzer" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/success</item>
+        <item name="colorPrimaryVariant">@color/agro_dark_green</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:statusBarColor">@color/agro_dark_green</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowBackground">#FFF8F4E6</item>
     </style>
 
     <style name="Theme.AgroFieldAnalyzer" parent="Base.Theme.AgroFieldAnalyzer" />

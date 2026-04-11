@@ -68,7 +68,7 @@ class PhotoTable(db: SQLiteDatabase) : BaseTable(db) {
                         id = it.getLongSafe(COLUMN_ID),
                         fieldId = it.getLongSafe(COLUMN_FIELD_ID),
                         photoUri = it.getStringSafe(COLUMN_PHOTO_URI),
-                        analysisResult = it.getStringSafe(COLUMN_ANALYSIS_RESULT).takeIf { r -> r.isNotEmpty() },
+                        // analysisResult = it.getStringSafe(COLUMN_ANALYSIS_RESULT).takeIf { r -> r.isNotEmpty() },
                         photoDate = it.getStringSafe(COLUMN_PHOTO_DATE)
                     )
                 )

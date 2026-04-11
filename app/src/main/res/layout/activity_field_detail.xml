@@ -1,246 +1,249 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFF8F4E6">
 
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/llButtons"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Кнопка "Назад" и заголовок в одной строке -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="24dp">
+
+                    <ImageButton
+                        android:id="@+id/btnBack"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/arrow_back"
+                        android:contentDescription="Назад" />
+
+                    <TextView
+                        android:id="@+id/tvTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="@color/agro_dark_green"
+                        android:textSize="28sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Название поля"
+                    android:textColor="#555555"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/etFieldName"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="@drawable/edit_text_background"
+                    android:hint="Название поля"
+                    android:inputType="text"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/black"
+                    android:textSize="18sp"
+                    android:layout_marginBottom="24dp" />
+
+                <!-- Разделитель -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginBottom="24dp" />
+
+                <!-- Секция: Параметры поля -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Параметры поля"
+                    android:textColor="#555555"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Площадь -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Площадь:"
+                        android:textColor="#757575"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/etArea"
+                        android:layout_width="120dp"
+                        android:layout_height="24dp"
+                        android:hint="0.0 га"
+                        android:background="@drawable/edit_text_background"
+                        android:inputType="numberDecimal"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:textColor="@color/black"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:gravity="end" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Густота стояния:"
+                    android:textColor="#757575"
+                    android:textSize="18sp" />
+
+                    <TextView
+                        android:id="@+id/tvDensity"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Рассчитать густоту"
+                        android:textColor="@color/success"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <!-- Ширина междурядья -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Ширина междурядья:"
+                        android:textColor="#757575"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/etRowSpacing"
+                        android:layout_width="120dp"
+                        android:layout_height="24dp"
+                        android:background="@drawable/edit_text_background"
+                        android:inputType="numberDecimal"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:hint="0 см"
+                        android:textColor="@color/black"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:gravity="end" />
+
+                </LinearLayout>
+
+            <!-- Исключаемая площадь -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="24dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Исключаемая площадь:"
+                        android:textColor="#757575"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/etExcludedArea"
+                        android:layout_width="120dp"
+                        android:layout_height="24dp"
+                        android:background="@drawable/edit_text_background"
+                        android:inputType="numberDecimal"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:hint="0.0 га"
+                        android:textColor="@color/black"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:gravity="end" />
+
+                </LinearLayout>
+
+                <!-- Разделитель -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginBottom="24dp" />
+
+                <!-- Секция: Фото поля -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Фото поля"
+                    android:textColor="#555555"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="16dp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvPhotos"
+                    android:layout_width="match_parent"
+                    android:layout_height="130dp"
+                    android:nestedScrollingEnabled="false"
+                    android:layout_marginBottom="16dp" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
     <LinearLayout
+        android:id="@+id/llButtons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="16dp"
+        android:background="#FFF8F4E6"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Кнопка "Назад" и заголовок в одной строке -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="24dp">
-
-            <ImageButton
-                android:id="@+id/btnBack"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/arrow_back"
-                android:contentDescription="Назад" />
-
-            <TextView
-                android:id="@+id/tvTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textColor="@color/agro_dark_green"
-                android:textSize="28sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
-
-        <!-- Секция: Название поля -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Название поля"
-            android:textColor="#555555"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
-
-        <EditText
-            android:id="@+id/etFieldName"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:background="@drawable/edit_text_background"
-            android:hint="Название поля"
-            android:inputType="text"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:textColor="@color/black"
-            android:textSize="18sp"
-            android:layout_marginBottom="24dp" />
-
-        <!-- Разделитель -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#E0E0E0"
-            android:layout_marginBottom="24dp" />
-
-        <!-- Секция: Параметры поля -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Параметры поля"
-            android:textColor="#555555"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp" />
-
-        <!-- Площадь -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Площадь:"
-                android:textColor="#757575"
-                android:textSize="18sp" />
-
-            <EditText
-                android:id="@+id/etArea"
-                android:layout_width="120dp"
-                android:layout_height="24dp"
-                android:hint="0.0 га"
-                android:background="@drawable/edit_text_background"
-                android:inputType="numberDecimal"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:textColor="@color/black"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:gravity="end" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Густота стояния:"
-                android:textColor="#757575"
-                android:textSize="18sp" />
-
-            <TextView
-                android:id="@+id/tvDensity"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Рассчитать густоту"
-                android:textColor="@color/success"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
-
-        <!-- Ширина междурядья -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Ширина междурядья:"
-                android:textColor="#757575"
-                android:textSize="18sp" />
-
-            <EditText
-                android:id="@+id/etRowSpacing"
-                android:layout_width="120dp"
-                android:layout_height="24dp"
-                android:background="@drawable/edit_text_background"
-                android:inputType="numberDecimal"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:hint="0 см"
-                android:textColor="@color/black"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:gravity="end" />
-
-        </LinearLayout>
-
-        <!-- Исключаемая площадь -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="24dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Исключаемая площадь:"
-                android:textColor="#757575"
-                android:textSize="18sp" />
-
-            <EditText
-                android:id="@+id/etExcludedArea"
-                android:layout_width="120dp"
-                android:layout_height="24dp"
-                android:background="@drawable/edit_text_background"
-                android:inputType="numberDecimal"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:hint="0.0 га"
-                android:textColor="@color/black"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:gravity="end" />
-
-        </LinearLayout>
-
-        <!-- Разделитель -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#E0E0E0"
-            android:layout_marginBottom="24dp" />
-
-        <!-- Секция: Фото поля -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Фото поля"
-            android:textColor="#555555"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp" />
-
-        <!-- Кнопка добавления фото -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:weightSum="3">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnAddPhoto"
-                android:layout_width="0dp"
-                android:layout_height="120dp"
-                android:layout_weight="1"
-                android:text="+"
-                android:textSize="48sp"
-                android:textColor="@color/success"
-                app:cornerRadius="16dp"
-                app:strokeColor="@color/success"
-                app:strokeWidth="2dp"
-                android:backgroundTint="@color/white" />
-
-            <View
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="2" />
-
-        </LinearLayout>
-
-        <!-- Кнопка Сохранить -->
         <Button
             android:id="@+id/btnSave"
             android:layout_width="match_parent"
@@ -251,21 +254,21 @@
             android:textStyle="bold"
             android:backgroundTint="@color/success"
             android:textColor="@color/white"
-            app:cornerRadius="32dp"
-            android:layout_marginTop="16dp" />
+            app:cornerRadius="32dp" />
 
         <Button
             android:id="@+id/btnDelete"
             android:layout_width="match_parent"
             android:layout_height="64dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:text="Удалить поле"
             android:textAllCaps="false"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:backgroundTint="@color/error"
+            android:backgroundTint="#D32F2F"
             android:textColor="@color/white"
             app:cornerRadius="32dp" />
 
     </LinearLayout>
-</ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -24,7 +24,7 @@ class FieldTable(db: SQLiteDatabase) : BaseTable(db) {
                 $COLUMN_AREA REAL DEFAULT 0,
                 $COLUMN_ROW_SPACING REAL DEFAULT 0,
                 $COLUMN_EXCLUDED_AREA REAL DEFAULT 0,
-                $COLUMN_LAST_CAPTURE TEXT,
+                $COLUMN_LAST_CAPTURE TIMESTAMP DEFAULT NULL,
                 $COLUMN_CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 $COLUMN_DELETED_AT TIMESTAMP DEFAULT NULL
             )
@@ -54,12 +54,18 @@ class FieldTable(db: SQLiteDatabase) : BaseTable(db) {
         return update(id, values)
     }
 
-    fun updateLastCaptureDate(fieldId: Long, date: String): Int {
+    fun updateLastCaptureDate(fieldId: Long): Int {
         val values = ContentValues().apply {
-            put(COLUMN_LAST_CAPTURE, date)
+            put(COLUMN_LAST_CAPTURE, "CURRENT_TIMESTAMP")
         }
-        return update(fieldId, values)
+        return db.update(
+            TABLE_NAME,
+            values,
+            "$COLUMN_ID = ?",
+            arrayOf(fieldId.toString())
+        )
     }
+
 
     fun getAll(): List<Field> {
         val cursor = db.query(

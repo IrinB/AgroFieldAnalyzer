@@ -4,7 +4,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFF8F4E6"> <!-- Теплый светлый фон, меньше бликов чем чисто белый -->
+    android:background="#FFF8F4E6"
+    android:fitsSystemWindows="true"> <!-- Теплый светлый фон, меньше бликов чем чисто белый -->
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvFields"

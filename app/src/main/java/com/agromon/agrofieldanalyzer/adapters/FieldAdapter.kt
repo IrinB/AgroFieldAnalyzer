@@ -1,4 +1,4 @@
-package com.agromon.agrofieldanalyzer.adapter
+package com.agromon.agrofieldanalyzer.adapters
 
 import androidx.recyclerview.widget.RecyclerView
 import android.view.ViewGroup
