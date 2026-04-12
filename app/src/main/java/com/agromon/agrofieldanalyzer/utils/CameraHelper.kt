@@ -75,13 +75,14 @@ class CameraHelper(private val activity: Activity) {
     }
 
     fun openGallery() {
-        val intent = Intent(Intent.ACTION_PICK)
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
         intent.type = "image/*"
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
         activity.startActivityForResult(intent, REQUEST_CODE_PICK_IMAGE)
     }
 
     fun showImageSourceDialog(onCamera: () -> Unit, onGallery: () -> Unit) {
-        val options = arrayOf("Камера", "Галерея")
+        val options = arrayOf("Камера", "Память устройства")
         androidx.appcompat.app.AlertDialog.Builder(activity)
             .setTitle("Выберите источник фото")
             .setItems(options) { _, which ->

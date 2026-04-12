@@ -1,6 +1,6 @@
 package com.agromon.agrofieldanalyzer.adapters
 
-import android.net.Uri
+import com.bumptech.glide.Glide
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -51,6 +51,7 @@ class PhotoAdapter(
         fun bindAdd() {
             imageView.setImageDrawable(null)
             addIcon.visibility = View.VISIBLE
+            btnDelete.visibility = View.GONE  // ← добавьте эту строку
             itemView.setOnClickListener { onAddClick() }
         }
 
@@ -58,14 +59,17 @@ class PhotoAdapter(
             addIcon.visibility = View.GONE
             btnDelete.visibility = View.VISIBLE
 
-            try {
-                imageView.setImageURI(Uri.parse(photo.photoUri))
-            } catch (e: Exception) {
-                imageView.setImageResource(R.drawable.ic_photo_placeholder)
-            }
+            Glide.with(itemView.context)
+                .load(photo.photoUri)
+                .placeholder(R.drawable.ic_photo_placeholder)
+                .into(imageView)
 
             itemView.setOnClickListener { onPhotoClick(photo) }
-            btnDelete.setOnClickListener { onDeleteClick(photo) }
+
+            // Убедитесь, что эта строка есть и НЕ закомментирована
+            btnDelete.setOnClickListener {
+                onDeleteClick(photo)
+            }
         }
     }
 }

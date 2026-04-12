@@ -47,6 +47,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
 
     implementation("com.google.android.material:material:1.10.0")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 
     implementation("org.tensorflow:tensorflow-lite:2.6.0") {
         exclude(group = "org.tensorflow", module = "tensorflow-lite-api")
