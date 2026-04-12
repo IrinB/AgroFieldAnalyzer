@@ -50,7 +50,12 @@ abstract class BaseTable(protected val db: SQLiteDatabase) {
     }
 
     protected fun Cursor.getStringSafe(columnName: String): String {
-        return getString(getColumnIndexOrThrow(columnName))
+        val index = getColumnIndex(columnName)
+        return if (index >= 0 && !isNull(index)) {
+            getString(index)
+        } else {
+            ""
+        }
     }
 
     protected fun Cursor.getLongSafe(columnName: String): Long {
@@ -63,5 +68,9 @@ abstract class BaseTable(protected val db: SQLiteDatabase) {
 
     protected fun Cursor.getIntSafe(columnName: String): Int {
         return getInt(getColumnIndexOrThrow(columnName))
+    }
+
+    protected fun Cursor.getFloatSafe(columnName: String): Float {
+        return getFloat(getColumnIndexOrThrow(columnName))
     }
 }

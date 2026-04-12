@@ -13,6 +13,8 @@ class PhotoTable(db: SQLiteDatabase) : BaseTable(db) {
         const val COLUMN_PHOTO_URI = "photo_uri"
         const val COLUMN_ANALYSIS_RESULT = "analysis_result"
         const val COLUMN_PHOTO_DATE = "photo_date"
+        const val COLUMN_PLANT_COUNT = "plant_count"
+        const val COLUMN_DENSITY = "density"
 
         // SQL для создания таблицы
         val CREATE_TABLE = """
@@ -21,6 +23,8 @@ class PhotoTable(db: SQLiteDatabase) : BaseTable(db) {
                 $COLUMN_FIELD_ID INTEGER NOT NULL,
                 $COLUMN_PHOTO_URI TEXT NOT NULL,
                 $COLUMN_ANALYSIS_RESULT TEXT,
+                $COLUMN_PLANT_COUNT INTEGER DEFAULT 0,
+                $COLUMN_DENSITY REAL DEFAULT 0,
                 $COLUMN_PHOTO_DATE TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY ($COLUMN_FIELD_ID) REFERENCES ${FieldTable.TABLE_NAME} (${FieldTable.COLUMN_ID}) ON DELETE CASCADE
             )
@@ -53,7 +57,8 @@ class PhotoTable(db: SQLiteDatabase) : BaseTable(db) {
         val cursor = db.query(
             TABLE_NAME,
             arrayOf(COLUMN_ID, COLUMN_FIELD_ID, COLUMN_PHOTO_URI,
-                COLUMN_ANALYSIS_RESULT, COLUMN_PHOTO_DATE),
+                COLUMN_ANALYSIS_RESULT, COLUMN_PHOTO_DATE,
+                COLUMN_PLANT_COUNT, COLUMN_DENSITY),  // ← добавьте
             "$COLUMN_FIELD_ID = ?",
             arrayOf(fieldId.toString()),
             null, null,
@@ -68,8 +73,10 @@ class PhotoTable(db: SQLiteDatabase) : BaseTable(db) {
                         id = it.getLongSafe(COLUMN_ID),
                         fieldId = it.getLongSafe(COLUMN_FIELD_ID),
                         photoUri = it.getStringSafe(COLUMN_PHOTO_URI),
-                        // analysisResult = it.getStringSafe(COLUMN_ANALYSIS_RESULT).takeIf { r -> r.isNotEmpty() },
-                        photoDate = it.getStringSafe(COLUMN_PHOTO_DATE)
+                        analysisResult = it.getStringSafe(COLUMN_ANALYSIS_RESULT),
+                        photoDate = it.getStringSafe(COLUMN_PHOTO_DATE),
+                        plantCount = it.getIntSafe(COLUMN_PLANT_COUNT),
+                        density = it.getFloatSafe(COLUMN_DENSITY)
                     )
                 )
             }
@@ -112,5 +119,13 @@ class PhotoTable(db: SQLiteDatabase) : BaseTable(db) {
             "$COLUMN_FIELD_ID = ?",
             arrayOf(fieldId.toString())
         )
+    }
+
+    fun updateAnalysisResult(photoId: Long, plantCount: Int, density: Float) {
+        val values = ContentValues().apply {
+            put(COLUMN_PLANT_COUNT, plantCount)
+            put(COLUMN_DENSITY, density)
+        }
+        update(photoId, values)
     }
 }

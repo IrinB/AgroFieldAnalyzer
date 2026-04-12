@@ -3,8 +3,10 @@ package com.agromon.agrofieldanalyzer
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
@@ -17,14 +19,17 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.agromon.agrofieldanalyzer.adapters.PhotoAdapter
 import com.agromon.agrofieldanalyzer.database.DatabaseHelper
+import com.agromon.agrofieldanalyzer.ml.YoloDetector
 import com.agromon.agrofieldanalyzer.model.Field
 import com.agromon.agrofieldanalyzer.model.Photo
 import com.agromon.agrofieldanalyzer.utils.CameraHelper
 import com.agromon.agrofieldanalyzer.utils.SquareItemDecoration
+import kotlinx.coroutines.Dispatchers
 
 class FieldDetailActivity : AppCompatActivity() {
 
     private var fieldId: Long = 0
+
     private lateinit var dbHelper: DatabaseHelper
     private lateinit var cameraHelper: CameraHelper
     private lateinit var photoAdapter: PhotoAdapter
@@ -34,6 +39,11 @@ class FieldDetailActivity : AppCompatActivity() {
     private lateinit var etArea: EditText
     private lateinit var etRowSpacing: EditText
     private lateinit var etExcludedArea: EditText
+    private lateinit var btnCalculateDensity: Button
+    private lateinit var tvDensityResult: TextView
+
+    private var hasUnanalyzedPhotos = false
+    private var currentFieldArea: Double = 0.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +55,8 @@ class FieldDetailActivity : AppCompatActivity() {
         initViews()
         setupPhotoGrid()
 
+        btnCalculateDensity = findViewById<Button>(R.id.btnCalculateDensity)
+
         fieldId = intent.getLongExtra("field_id", 0)
 
         if (fieldId == 0L) {
@@ -52,6 +64,9 @@ class FieldDetailActivity : AppCompatActivity() {
             etFieldName.hint = "Введите название поля"
             etFieldName.setText("")
             etFieldName.requestFocus()
+
+            btnCalculateDensity.isEnabled = false
+            btnCalculateDensity.alpha = 0.5f
 
             showKeyboard()
 
@@ -70,6 +85,7 @@ class FieldDetailActivity : AppCompatActivity() {
         etArea = findViewById(R.id.etArea)
         etRowSpacing = findViewById(R.id.etRowSpacing)
         etExcludedArea = findViewById(R.id.etExcludedArea)
+        tvDensityResult = findViewById(R.id.tvDensityResult)
     }
 
     private fun setupPhotoGrid() {
@@ -98,6 +114,7 @@ class FieldDetailActivity : AppCompatActivity() {
         val field = dbHelper.getFieldTable().getById(id)
         field?.let {
             title = it.name
+            currentFieldArea = it.area
             etFieldName.setText(it.name)
             etArea.setText(it.area.toString())
             etRowSpacing.setText(it.rowSpacing.toString())
@@ -119,6 +136,85 @@ class FieldDetailActivity : AppCompatActivity() {
             rvPhotos.layoutParams.height = itemWidth * rows
             rvPhotos.requestLayout()
         }
+
+        hasUnanalyzedPhotos = photos.any { it.plantCount == 0 }
+        btnCalculateDensity.isEnabled = hasUnanalyzedPhotos && photos.isNotEmpty()
+        if (btnCalculateDensity.isEnabled) {
+            btnCalculateDensity.alpha = 1.0f
+        } else {
+            btnCalculateDensity.alpha = 0.5f
+        }
+    }
+
+    private fun calculateDensityForAllPhotos() {
+        val photos = dbHelper.getPhotoTable().getByFieldId(fieldId)
+        val unanalyzedPhotos = photos.filter { it.plantCount == 0 }
+
+        if (unanalyzedPhotos.isEmpty()) {
+            Toast.makeText(this, "Все фото уже проанализированы", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        btnCalculateDensity.isEnabled = false
+        btnCalculateDensity.text = "Расчёт..."
+
+        analyzeNextPhoto(unanalyzedPhotos, 0)
+    }
+
+    private fun analyzeNextPhoto(photos: List<Photo>, index: Int) {
+        if (index >= photos.size) {
+            runOnUiThread {
+                btnCalculateDensity.text = "Рассчитать"
+                btnCalculateDensity.isEnabled = true
+                updateDensityDisplay()
+                Toast.makeText(this, "Расчёт завершён!", Toast.LENGTH_SHORT).show()
+            }
+            return
+        }
+
+        val photo = photos[index]
+        val detector = YoloDetector(this)
+
+        if (!detector.initialize()) {
+            Toast.makeText(this, "Ошибка загрузки модели", Toast.LENGTH_SHORT).show()
+            btnCalculateDensity.text = "Рассчитать"
+            btnCalculateDensity.isEnabled = true
+            return
+        }
+
+        Thread {
+            try {
+                val bitmap = BitmapFactory.decodeFile(photo.photoUri.replace("file://", ""))
+                val plantCount = detector.countPlants(bitmap)
+                val density = if (currentFieldArea > 0) plantCount.toFloat() / currentFieldArea.toFloat() else 0f
+
+                val photoTable = dbHelper.getPhotoTable()
+                photoTable.updateAnalysisResult(photo.id, plantCount, density)
+
+                runOnUiThread {
+                    analyzeNextPhoto(photos, index + 1)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                runOnUiThread {
+                    analyzeNextPhoto(photos, index + 1)
+                }
+            } finally {
+                detector.close()
+            }
+        }.start()
+    }
+
+    private fun updateDensityDisplay() {
+        val photos = dbHelper.getPhotoTable().getByFieldId(fieldId)
+        val analyzedPhotos = photos.filter { it.plantCount > 0 }
+
+        if (analyzedPhotos.isNotEmpty()) {
+            val totalPlants = analyzedPhotos.sumOf { it.plantCount }
+            val avgDensity = if (currentFieldArea > 0) totalPlants.toFloat() / currentFieldArea.toFloat() else 0f
+            tvDensityResult.text = String.format("%.1f раст/га", avgDensity)
+            tvDensityResult.visibility = View.VISIBLE
+        }
     }
 
     private fun setupListeners() {
@@ -136,6 +232,10 @@ class FieldDetailActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btnSave).setOnClickListener {
             saveField()
+        }
+
+        btnCalculateDensity.setOnClickListener {
+            calculateDensityForAllPhotos()
         }
     }
 

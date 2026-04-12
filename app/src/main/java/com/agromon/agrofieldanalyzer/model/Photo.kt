@@ -5,5 +5,7 @@ data class Photo(
     val fieldId: Long,
     val photoUri: String,
     val analysisResult: String? = null,
-    val photoDate: String
+    val photoDate: String,
+    val plantCount: Int = 0,
+    val density: Float = 0f
 )
