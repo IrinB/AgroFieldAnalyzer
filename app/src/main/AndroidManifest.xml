@@ -29,6 +29,10 @@
             android:name=".FieldDetailActivity"
             android:exported="false"
             android:theme="@style/Theme.AgroFieldAnalyzer" />
+        <activity
+            android:name=".FullScreenPhotoActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AgroFieldAnalyzer" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

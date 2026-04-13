@@ -101,7 +101,14 @@ class FieldDetailActivity : AppCompatActivity() {
                 openCamera()
             },
             onPhotoClick = { photo ->
-                Toast.makeText(this, "Просмотр фото", Toast.LENGTH_SHORT).show()
+                if (photo.plantCount == 0) {
+                    val intent = Intent(this, FullScreenPhotoActivity::class.java)
+                    intent.putExtra("photo_uri", photo.photoUri)
+                    startActivity(intent)
+                } else {
+                    // Анализированное фото — позже покажем с bounding boxes
+                    Toast.makeText(this, "Найдено ростков: ${photo.plantCount}", Toast.LENGTH_SHORT).show()
+                }
             },
             onDeleteClick = { photo ->
                 showDeletePhotoDialog(photo)
