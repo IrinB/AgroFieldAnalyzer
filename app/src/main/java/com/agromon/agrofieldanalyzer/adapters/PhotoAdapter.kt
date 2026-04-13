@@ -64,12 +64,16 @@ class PhotoAdapter(
                 .placeholder(R.drawable.ic_photo_placeholder)
                 .into(imageView)
 
-            itemView.setOnClickListener { onPhotoClick(photo) }
-
-            // Убедитесь, что эта строка есть и НЕ закомментирована
-            btnDelete.setOnClickListener {
-                onDeleteClick(photo)
+            // Визуально показываем, что фото проанализировано
+            if (photo.plantCount > 0) {
+                itemView.alpha = 1.0f
+                // Можно добавить иконку "галочка"
             }
+
+            itemView.setOnClickListener { onPhotoClick(photo) }
+            btnDelete.setOnClickListener { onDeleteClick(photo) }
         }
     }
+
+    fun getCurrentList(): List<Photo> = photos
 }

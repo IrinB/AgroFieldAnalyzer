@@ -25,10 +25,12 @@ import com.agromon.agrofieldanalyzer.model.Photo
 import com.agromon.agrofieldanalyzer.utils.CameraHelper
 import java.io.File
 import android.Manifest
+import android.graphics.RectF
 import android.os.Build
 import android.view.View
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import kotlin.math.tan
 
 class FieldDetailActivity : AppCompatActivity() {
 
@@ -106,8 +108,13 @@ class FieldDetailActivity : AppCompatActivity() {
                     intent.putExtra("photo_uri", photo.photoUri)
                     startActivity(intent)
                 } else {
-                    // Анализированное фото — позже покажем с bounding boxes
-                    Toast.makeText(this, "Найдено ростков: ${photo.plantCount}", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this, FullScreenPhotoActivity::class.java).apply {
+                        putExtra("photo_uri", photo.photoUri)
+                        putExtra("plant_count", photo.plantCount)
+                        putExtra("has_analysis", photo.plantCount > 0)
+                        putExtra("detections_file", photo.detectionsFile)  // ← файл вместо JSON
+                    }
+                    startActivity(intent)
                 }
             },
             onDeleteClick = { photo ->
@@ -174,6 +181,8 @@ class FieldDetailActivity : AppCompatActivity() {
         }
 
         btnCalculateDensity.isEnabled = false
+        btnCalculateDensity.alpha = 0.5f
+
         btnCalculateDensity.text = "Расчёт..."
 
         analyzeNextPhoto(unanalyzedPhotos, 0)
@@ -184,9 +193,11 @@ class FieldDetailActivity : AppCompatActivity() {
             runOnUiThread {
                 btnCalculateDensity.text = "Рассчитать"
                 btnCalculateDensity.isEnabled = false
+                btnCalculateDensity.alpha = 0.5f
 
                 saveAnalysisHistory()
                 loadLastAnalysisResult()
+                loadPhotos()  // ← обновляем список после завершения всех фото
 
                 Toast.makeText(this@FieldDetailActivity, "Расчёт завершён!", Toast.LENGTH_SHORT).show()
             }
@@ -220,14 +231,28 @@ class FieldDetailActivity : AppCompatActivity() {
                 }
 
                 val plantCount = detector.countPlants(bitmap)
+                val detections = detector.detect(bitmap)
+                val soyaDetections = detections.filter { it.className == "soya" }
+
+                Log.d("FieldDetailActivity", "Координаты из модели: ${soyaDetections.firstOrNull()?.boundingBox}")
+                val jsonFileName = "detections_${photo.id}.json"
+                val jsonFile = File(filesDir, jsonFileName)
+                jsonFile.writeText(detector.detectionsToJson(soyaDetections))
+
                 val density = if (currentFieldArea > 0) plantCount.toFloat() / currentFieldArea.toFloat() else 0f
 
                 val photoTable = dbHelper.getPhotoTable()
-                photoTable.updateAnalysisResult(photo.id, plantCount, density)
+                photoTable.updateAnalysisResult(photo.id, plantCount, density, jsonFileName)
 
                 detector.close()
 
+                // Обновляем UI после КАЖДОГО фото
                 runOnUiThread {
+                    // Обновляем фото в адаптере
+                    val updatedPhoto = photo.copy(plantCount = plantCount, density = density, detectionsFile = jsonFileName)
+                    updatePhotoInAdapter(updatedPhoto)
+
+                    Toast.makeText(this@FieldDetailActivity, "Фото ${index + 1}/${photos.size}: $plantCount ростков", Toast.LENGTH_SHORT).show()
                     analyzeNextPhoto(photos, index + 1)
                 }
 
@@ -241,13 +266,37 @@ class FieldDetailActivity : AppCompatActivity() {
         }.start()
     }
 
+    private fun updatePhotoInAdapter(updatedPhoto: Photo) {
+        val currentList = photoAdapter.getCurrentList().toMutableList()
+        val index = currentList.indexOfFirst { it.id == updatedPhoto.id }
+        if (index >= 0) {
+            currentList[index] = updatedPhoto
+            photoAdapter.submitList(currentList)
+        }
+    }
+
     private fun saveAnalysisHistory() {
         val photos = dbHelper.getPhotoTable().getByFieldId(fieldId)
         val analyzedPhotos = photos.filter { it.plantCount > 0 }
 
         if (analyzedPhotos.isNotEmpty()) {
+            // Параметры съёмки
+            val cameraHeight = 1.2f  // метры
+            val fovDegrees = 70f     // угол обзора
+            val aspectRatio = 4f / 3f
+
+            val fovRadians = Math.toRadians(fovDegrees.toDouble())
+            val frameWidth = (2 * cameraHeight * tan(fovRadians / 2)).toFloat()
+            val frameHeight = frameWidth / aspectRatio
+            val photoAreaHa = (frameWidth * frameHeight) / 10000f
+
+            // Густота для каждого фото
+            val densities = analyzedPhotos.map { photo ->
+                photo.plantCount.toFloat() / photoAreaHa
+            }
+
+            val avgDensity = densities.average().toFloat()
             val totalPlants = analyzedPhotos.sumOf { it.plantCount }
-            val avgDensity = if (currentFieldArea > 0) totalPlants.toFloat() / currentFieldArea.toFloat() else 0f
 
             dbHelper.getAnalysisHistoryTable().insert(fieldId, totalPlants, avgDensity)
         }
@@ -256,7 +305,8 @@ class FieldDetailActivity : AppCompatActivity() {
     private fun loadLastAnalysisResult() {
         val lastAnalysis = dbHelper.getAnalysisHistoryTable().getLastByFieldId(fieldId)
         if (lastAnalysis != null) {
-            tvDensityResult.text = String.format("Средняя густота: %.1f раст/га", lastAnalysis.density)
+            val densityInThousands = lastAnalysis.density / 1000f
+            tvDensityResult.text = String.format("Средняя густота: %.1f тыс. раст/га", densityInThousands)
             tvDensityResult.visibility = View.VISIBLE
         } else {
             tvDensityResult.visibility = View.GONE

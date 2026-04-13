@@ -9,14 +9,17 @@ import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.exp
+import org.json.JSONArray
+import org.json.JSONObject
 
 class YoloDetector(private val context: Context) {
 
     companion object {
+
+        private const val IOU_THRESHOLD = 0.3f
         private const val MODEL_FILE = "model/best_float32.tflite"
         private const val INPUT_SIZE = 640
-        private const val CONFIDENCE_THRESHOLD = 0.5f
-        private const val NUM_CLASSES = 1  // plant и soya
+        private const val CONFIDENCE_THRESHOLD = 0.6f
     }
 
     private var interpreter: Interpreter? = null
@@ -103,6 +106,7 @@ class YoloDetector(private val context: Context) {
             val confidence = sigmoid(confArray[i])
 
             if (confidence >= CONFIDENCE_THRESHOLD) {
+                // Координаты уже в пикселях 640x640, масштабируем до оригинального размера
                 val cx = cxArray[i] * scaleX
                 val cy = cyArray[i] * scaleY
                 val w = wArray[i] * scaleX
@@ -126,12 +130,13 @@ class YoloDetector(private val context: Context) {
 
         return nonMaxSuppression(detections)
     }
-
     private fun sigmoid(x: Float): Float {
         return (1f / (1f + exp(-x)))
     }
 
     private fun nonMaxSuppression(detections: List<Detection>): List<Detection> {
+        Log.d("YoloDetector", "NMS: вход ${detections.size} детекций")
+
         if (detections.isEmpty()) return detections
 
         val sorted = detections.sortedByDescending { it.confidence }.toMutableList()
@@ -145,11 +150,13 @@ class YoloDetector(private val context: Context) {
             while (iterator.hasNext()) {
                 val current = iterator.next()
                 val iou = calculateIoU(best.boundingBox, current.boundingBox)
-                if (iou >= 0.4f) {
+                if (iou >= IOU_THRESHOLD) {
                     iterator.remove()
                 }
             }
         }
+
+        Log.d("YoloDetector", "NMS: выход ${result.size} детекций")
         return result
     }
 
@@ -177,5 +184,48 @@ class YoloDetector(private val context: Context) {
     fun close() {
         interpreter?.close()
         interpreter = null
+    }
+
+    fun detectionsToJson(detections: List<Detection>): String {
+        val jsonArray = JSONArray()
+        for (d in detections) {
+            val json = JSONObject().apply {
+                put("left", d.boundingBox.left)
+                put("top", d.boundingBox.top)
+                put("right", d.boundingBox.right)
+                put("bottom", d.boundingBox.bottom)
+                put("confidence", d.confidence)
+                put("classId", d.classId)
+                put("className", d.className)
+            }
+            jsonArray.put(json)
+        }
+        return jsonArray.toString()
+    }
+
+    fun jsonToDetections(json: String): List<Detection> {
+        val detections = mutableListOf<Detection>()
+        try {
+            val jsonArray = JSONArray(json)
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                detections.add(
+                    Detection(
+                        boundingBox = RectF(
+                            obj.getDouble("left").toFloat(),
+                            obj.getDouble("top").toFloat(),
+                            obj.getDouble("right").toFloat(),
+                            obj.getDouble("bottom").toFloat()
+                        ),
+                        confidence = obj.getDouble("confidence").toFloat(),
+                        classId = obj.getInt("classId"),
+                        className = obj.getString("className")
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("YoloDetector", "Ошибка парсинга JSON", e)
+        }
+        return detections
     }
 }

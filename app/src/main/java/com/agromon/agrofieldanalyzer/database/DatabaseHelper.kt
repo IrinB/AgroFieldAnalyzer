@@ -10,7 +10,7 @@ class DatabaseHelper(context: Context) :
 
     companion object {
         private const val DATABASE_NAME = "agro_fields.db"
-        private const val DATABASE_VERSION = 4
+        private const val DATABASE_VERSION = 6
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -22,7 +22,7 @@ class DatabaseHelper(context: Context) :
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS ${PhotoTable.TABLE_NAME}")
         db.execSQL("DROP TABLE IF EXISTS ${FieldTable.TABLE_NAME}")
-        db.execSQL(AnalysisHistoryTable.CREATE_TABLE)
+        db.execSQL("DROP TABLE IF EXISTS ${AnalysisHistoryTable.CREATE_TABLE}")
         onCreate(db)
     }
 

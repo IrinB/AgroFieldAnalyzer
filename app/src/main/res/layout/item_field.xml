@@ -100,7 +100,6 @@
                 android:id="@+id/tvFieldDenseValue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="156 ед./га"
                 android:textColor="#555555"
                 android:textSize="18sp"
                 android:textStyle="bold" />

@@ -7,5 +7,6 @@ data class Photo(
     val analysisResult: String? = null,
     val photoDate: String,
     val plantCount: Int = 0,
-    val density: Float = 0f
+    val density: Float = 0f,
+    val detectionsFile: String? = null
 )
