@@ -129,23 +129,20 @@
                 android:layout_marginBottom="12dp">
 
                 <TextView
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Густота стояния:"
+                    android:text="Густота стояния: "
                     android:textColor="#757575"
                     android:textSize="18sp" />
 
                 <TextView
                     android:id="@+id/tvDensityResult"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginBottom="12dp"
+                    android:layout_weight="1"
                     android:text=""
                     android:textColor="#555555"
-                    android:textSize="16sp"
-                    android:visibility="gone" />
+                    android:textSize="16sp" />
 
                 <Button
                     android:id="@+id/btnCalculateDensity"

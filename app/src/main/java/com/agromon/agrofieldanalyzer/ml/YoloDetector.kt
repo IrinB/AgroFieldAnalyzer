@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import org.tensorflow.lite.Interpreter
 import android.graphics.RectF
+import android.util.Log
+import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.exp
@@ -14,7 +16,7 @@ class YoloDetector(private val context: Context) {
         private const val MODEL_FILE = "model/best_float32.tflite"
         private const val INPUT_SIZE = 640
         private const val CONFIDENCE_THRESHOLD = 0.5f
-        private const val NUM_CLASSES = 2  // plant и soya
+        private const val NUM_CLASSES = 1  // plant и soya
     }
 
     private var interpreter: Interpreter? = null
@@ -28,46 +30,41 @@ class YoloDetector(private val context: Context) {
 
     fun initialize(): Boolean {
         return try {
-            val modelFile = "model/best_float32.tflite"
-            val assetFileDescriptor = context.assets.openFd(modelFile)
-            val inputStream = assetFileDescriptor.createInputStream()
-            val modelBuffer = inputStream.readBytes()
+            val modelFile = File(context.filesDir, "best_float32.tflite")
 
-            // Преобразуем ByteArray в ByteBuffer
-            val byteBuffer = java.nio.ByteBuffer.allocateDirect(modelBuffer.size)
-            byteBuffer.put(modelBuffer)
-            byteBuffer.rewind()
+            if (!modelFile.exists()) {
+                context.assets.open(MODEL_FILE).use { input ->
+                    modelFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+            }
+            interpreter = Interpreter(modelFile)
 
-            interpreter = Interpreter(byteBuffer)
-
-            inputStream.close()
-            assetFileDescriptor.close()
             true
         } catch (e: Exception) {
-            e.printStackTrace()
             false
         }
     }
 
     fun detect(bitmap: Bitmap): List<Detection> {
-        val interpreter = this.interpreter ?: return emptyList()
+        val interpreter = this.interpreter ?: run {
+            return emptyList()
+        }
 
-        // 1. Изменяем размер bitmap до 640x640
-        val resizedBitmap = Bitmap.createScaledBitmap(bitmap, INPUT_SIZE, INPUT_SIZE, true)
+        try {
+            val resizedBitmap = Bitmap.createScaledBitmap(bitmap, INPUT_SIZE, INPUT_SIZE, true)
+            val inputBuffer = bitmapToByteBuffer(resizedBitmap)
+            val outputBuffer = Array(1) { Array(5) { FloatArray(8400) } }
 
-        // 2. Конвертируем bitmap в ByteBuffer
-        val inputBuffer = bitmapToByteBuffer(resizedBitmap)
+            interpreter.run(inputBuffer, outputBuffer)
 
-        // 3. Создаём выходной буфер
-        val outputShape = interpreter.getOutputTensor(0).shape()
-        val outputSize = outputShape.fold(1) { acc, i -> acc * i }
-        val outputBuffer = Array(1) { FloatArray(outputSize) }
+            return processOutput(outputBuffer[0], bitmap.width, bitmap.height)
 
-        // 4. Запускаем модель
-        interpreter.run(inputBuffer, outputBuffer)
-
-        // 5. Обрабатываем результаты
-        return processOutput(outputBuffer[0], bitmap.width, bitmap.height)
+        } catch (e: Exception) {
+            Log.e("YoloDetector", "Ошибка в detect", e)
+            return emptyList()
+        }
     }
 
     private fun bitmapToByteBuffer(bitmap: Bitmap): ByteBuffer {
@@ -90,33 +87,26 @@ class YoloDetector(private val context: Context) {
         return byteBuffer
     }
 
-    private fun processOutput(output: FloatArray, originalWidth: Int, originalHeight: Int): List<Detection> {
+    private fun processOutput(output: Array<FloatArray>, originalWidth: Int, originalHeight: Int): List<Detection> {
         val detections = mutableListOf<Detection>()
 
-        val numPredictions = 8400
-        val outputPerPrediction = 4 + NUM_CLASSES
+        val cxArray = output[0]
+        val cyArray = output[1]
+        val wArray = output[2]
+        val hArray = output[3]
+        val confArray = output[4]
 
         val scaleX = originalWidth.toFloat() / INPUT_SIZE
         val scaleY = originalHeight.toFloat() / INPUT_SIZE
 
-        for (i in 0 until numPredictions) {
-            val offset = i * outputPerPrediction
+        for (i in cxArray.indices) {
+            val confidence = sigmoid(confArray[i])
 
-            var maxConf = 0f
-            var maxClassId = -1
-
-            for (c in 0 until NUM_CLASSES) {
-                val conf = sigmoid(output[offset + 4 + c])
-                if (conf > maxConf) {
-                    maxConf = conf
-                    maxClassId = c
-                }
-            }
-            if (maxConf >= CONFIDENCE_THRESHOLD) {
-                val cx = output[offset + 0] * scaleX
-                val cy = output[offset + 1] * scaleY
-                val w = output[offset + 2] * scaleX
-                val h = output[offset + 3] * scaleY
+            if (confidence >= CONFIDENCE_THRESHOLD) {
+                val cx = cxArray[i] * scaleX
+                val cy = cyArray[i] * scaleY
+                val w = wArray[i] * scaleX
+                val h = hArray[i] * scaleY
 
                 val left = (cx - w / 2).coerceIn(0f, originalWidth.toFloat())
                 val top = (cy - h / 2).coerceIn(0f, originalHeight.toFloat())
@@ -126,9 +116,9 @@ class YoloDetector(private val context: Context) {
                 detections.add(
                     Detection(
                         boundingBox = RectF(left, top, right, bottom),
-                        confidence = maxConf,
-                        classId = maxClassId,
-                        className = getClassName(maxClassId)
+                        confidence = confidence,
+                        classId = 0,
+                        className = "soya"
                     )
                 )
             }
@@ -139,14 +129,6 @@ class YoloDetector(private val context: Context) {
 
     private fun sigmoid(x: Float): Float {
         return (1f / (1f + exp(-x)))
-    }
-
-    private fun getClassName(classId: Int): String {
-        return when (classId) {
-            0 -> "plant"
-            1 -> "soya"
-            else -> "unknown"
-        }
     }
 
     private fun nonMaxSuppression(detections: List<Detection>): List<Detection> {
@@ -189,9 +171,9 @@ class YoloDetector(private val context: Context) {
     }
 
     fun countPlants(bitmap: Bitmap): Int {
-        return detect(bitmap).count { it.className == "soya" }
+        val detections = detect(bitmap)
+        return detections.count { it.className == "soya" }
     }
-
     fun close() {
         interpreter?.close()
         interpreter = null

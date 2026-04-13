@@ -6,7 +6,7 @@ import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
+import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
@@ -23,8 +23,11 @@ import com.agromon.agrofieldanalyzer.ml.YoloDetector
 import com.agromon.agrofieldanalyzer.model.Field
 import com.agromon.agrofieldanalyzer.model.Photo
 import com.agromon.agrofieldanalyzer.utils.CameraHelper
-import com.agromon.agrofieldanalyzer.utils.SquareItemDecoration
-import kotlinx.coroutines.Dispatchers
+import java.io.File
+import android.Manifest
+import android.os.Build
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 
 class FieldDetailActivity : AppCompatActivity() {
 
@@ -147,6 +150,11 @@ class FieldDetailActivity : AppCompatActivity() {
     }
 
     private fun calculateDensityForAllPhotos() {
+        if (!checkStoragePermission()) {
+            requestStoragePermission()
+            return
+        }
+
         val photos = dbHelper.getPhotoTable().getByFieldId(fieldId)
         val unanalyzedPhotos = photos.filter { it.plantCount == 0 }
 
@@ -184,23 +192,47 @@ class FieldDetailActivity : AppCompatActivity() {
 
         Thread {
             try {
-                val bitmap = BitmapFactory.decodeFile(photo.photoUri.replace("file://", ""))
+                val path = photo.photoUri.replace("file://", "")
+                val bitmap = BitmapFactory.decodeFile(path)
+
+                if (bitmap == null) {
+                    runOnUiThread {
+                        Toast.makeText(this@FieldDetailActivity, "Не удалось загрузить фото", Toast.LENGTH_SHORT).show()
+                        analyzeNextPhoto(photos, index + 1)
+                    }
+                    return@Thread
+                }
+
+                val detector = YoloDetector(this@FieldDetailActivity)
+                val initialized = detector.initialize()
+
+                if (!initialized) {
+                    runOnUiThread {
+                        Toast.makeText(this@FieldDetailActivity, "Ошибка загрузки модели", Toast.LENGTH_SHORT).show()
+                        analyzeNextPhoto(photos, index + 1)
+                    }
+                    return@Thread
+                }
+
                 val plantCount = detector.countPlants(bitmap)
                 val density = if (currentFieldArea > 0) plantCount.toFloat() / currentFieldArea.toFloat() else 0f
 
                 val photoTable = dbHelper.getPhotoTable()
                 photoTable.updateAnalysisResult(photo.id, plantCount, density)
 
-                runOnUiThread {
-                    analyzeNextPhoto(photos, index + 1)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                runOnUiThread {
-                    analyzeNextPhoto(photos, index + 1)
-                }
-            } finally {
                 detector.close()
+
+                runOnUiThread {
+                    Toast.makeText(this@FieldDetailActivity, "Найдено ростков: $plantCount", Toast.LENGTH_SHORT).show()
+                    analyzeNextPhoto(photos, index + 1)
+                }
+
+            } catch (e: Exception) {
+                Log.e("FieldDetailActivity", "Ошибка анализа фото", e)
+                runOnUiThread {
+                    Toast.makeText(this@FieldDetailActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                    analyzeNextPhoto(photos, index + 1)
+                }
             }
         }.start()
     }
@@ -208,12 +240,12 @@ class FieldDetailActivity : AppCompatActivity() {
     private fun updateDensityDisplay() {
         val photos = dbHelper.getPhotoTable().getByFieldId(fieldId)
         val analyzedPhotos = photos.filter { it.plantCount > 0 }
+        tvDensityResult.text = ""
 
         if (analyzedPhotos.isNotEmpty()) {
             val totalPlants = analyzedPhotos.sumOf { it.plantCount }
             val avgDensity = if (currentFieldArea > 0) totalPlants.toFloat() / currentFieldArea.toFloat() else 0f
             tvDensityResult.text = String.format("%.1f раст/га", avgDensity)
-            tvDensityResult.visibility = View.VISIBLE
         }
     }
 
@@ -316,6 +348,9 @@ class FieldDetailActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
+        if (requestCode == 1001 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            calculateDensityForAllPhotos()
+        }
         if (requestCode == CameraHelper.REQUEST_CODE_CAMERA_PERMISSION) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 openCamera()
@@ -323,6 +358,34 @@ class FieldDetailActivity : AppCompatActivity() {
                 Toast.makeText(this, "Для для съемки необходим доступ к камере", Toast.LENGTH_SHORT)
                     .show()
             }
+        }
+    }
+
+    private fun checkStoragePermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                this, Manifest.permission.READ_MEDIA_IMAGES
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            ContextCompat.checkSelfPermission(
+                this, Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun requestStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.READ_MEDIA_IMAGES),
+                1001
+            )
+        } else {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                1001
+            )
         }
     }
 
@@ -346,13 +409,31 @@ class FieldDetailActivity : AppCompatActivity() {
     }
 
     private fun savePhoto(photoUri: Uri) {
-        val photoTable = dbHelper.getPhotoTable()
-        photoTable.insert(fieldId, photoUri.toString())
+        try {
+            // Копируем фото во внутреннее хранилище
+            val inputStream = contentResolver.openInputStream(photoUri)
+            val fileName = "photo_${System.currentTimeMillis()}.jpg"
+            val outputFile = File(filesDir, fileName)
 
-        dbHelper.getFieldTable().updateLastCaptureDate(fieldId)
+            inputStream?.use { input ->
+                outputFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
 
-        Toast.makeText(this, "Фото добавлено", Toast.LENGTH_SHORT).show()
-        loadPhotos()
+            // Сохраняем путь к файлу в БД
+            val photoTable = dbHelper.getPhotoTable()
+            photoTable.insert(fieldId, "file://${outputFile.absolutePath}")
+
+            dbHelper.getFieldTable().updateLastCaptureDate(fieldId)
+
+            Toast.makeText(this, "Фото добавлено", Toast.LENGTH_SHORT).show()
+            loadPhotos()
+
+        } catch (e: Exception) {
+            Log.e("FieldDetailActivity", "Ошибка сохранения фото", e)
+            Toast.makeText(this, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun showDeletePhotoDialog(photo: Photo) {
