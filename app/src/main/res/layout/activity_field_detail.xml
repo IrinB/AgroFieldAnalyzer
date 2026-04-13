@@ -124,39 +124,49 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
+                android:orientation="vertical"
                 android:layout_marginBottom="12dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Густота стояния: "
-                    android:textColor="#757575"
-                    android:textSize="18sp" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Густота стояния:"
+                        android:textColor="#757575"
+                        android:textSize="18sp" />
+
+                    <Button
+                        android:id="@+id/btnCalculateDensity"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:text="Рассчитать"
+                        android:textAllCaps="false"
+                        android:textSize="16sp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:backgroundTint="@color/success"
+                        android:textColor="@color/white"
+                        android:enabled="false"
+                        app:cornerRadius="24dp" />
+
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/tvDensityResult"
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_marginTop="8dp"
                     android:text=""
-                    android:textColor="#555555"
-                    android:textSize="16sp" />
-
-                <Button
-                    android:id="@+id/btnCalculateDensity"
-                    android:layout_width="wrap_content"
-                    android:layout_height="48dp"
-                    android:text="Рассчитать"
-                    android:textAllCaps="false"
+                    android:textColor="@color/black"
                     android:textSize="16sp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:backgroundTint="@color/success"
-                    android:textColor="@color/white"
-                    android:enabled="false"
-                    app:cornerRadius="24dp" />
+                    android:textStyle="bold"
+                    android:visibility="gone" />
 
             </LinearLayout>
 

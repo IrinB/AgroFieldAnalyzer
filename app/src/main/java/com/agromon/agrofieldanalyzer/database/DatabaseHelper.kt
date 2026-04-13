@@ -16,11 +16,13 @@ class DatabaseHelper(context: Context) :
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(FieldTable.CREATE_TABLE)
         db.execSQL(PhotoTable.CREATE_TABLE)
+        db.execSQL(AnalysisHistoryTable.CREATE_TABLE)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS ${PhotoTable.TABLE_NAME}")
         db.execSQL("DROP TABLE IF EXISTS ${FieldTable.TABLE_NAME}")
+        db.execSQL(AnalysisHistoryTable.CREATE_TABLE)
         onCreate(db)
     }
 
@@ -30,6 +32,10 @@ class DatabaseHelper(context: Context) :
 
     fun getPhotoTable(): PhotoTable {
         return PhotoTable(writableDatabase)
+    }
+
+    fun getAnalysisHistoryTable(): AnalysisHistoryTable {
+        return AnalysisHistoryTable(writableDatabase)
     }
 
     fun runInTransaction(block: () -> Unit) {

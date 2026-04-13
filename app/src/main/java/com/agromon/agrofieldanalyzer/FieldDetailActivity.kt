@@ -26,6 +26,7 @@ import com.agromon.agrofieldanalyzer.utils.CameraHelper
 import java.io.File
 import android.Manifest
 import android.os.Build
+import android.view.View
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
@@ -124,6 +125,8 @@ class FieldDetailActivity : AppCompatActivity() {
             etExcludedArea.setText(it.excludedArea.toString())
         }
 
+        loadLastAnalysisResult()
+
         return field
     }
 
@@ -173,22 +176,17 @@ class FieldDetailActivity : AppCompatActivity() {
         if (index >= photos.size) {
             runOnUiThread {
                 btnCalculateDensity.text = "Рассчитать"
-                btnCalculateDensity.isEnabled = true
-                updateDensityDisplay()
-                Toast.makeText(this, "Расчёт завершён!", Toast.LENGTH_SHORT).show()
+                btnCalculateDensity.isEnabled = false
+
+                saveAnalysisHistory()
+                loadLastAnalysisResult()
+
+                Toast.makeText(this@FieldDetailActivity, "Расчёт завершён!", Toast.LENGTH_SHORT).show()
             }
             return
         }
 
         val photo = photos[index]
-        val detector = YoloDetector(this)
-
-        if (!detector.initialize()) {
-            Toast.makeText(this, "Ошибка загрузки модели", Toast.LENGTH_SHORT).show()
-            btnCalculateDensity.text = "Рассчитать"
-            btnCalculateDensity.isEnabled = true
-            return
-        }
 
         Thread {
             try {
@@ -223,7 +221,6 @@ class FieldDetailActivity : AppCompatActivity() {
                 detector.close()
 
                 runOnUiThread {
-                    Toast.makeText(this@FieldDetailActivity, "Найдено ростков: $plantCount", Toast.LENGTH_SHORT).show()
                     analyzeNextPhoto(photos, index + 1)
                 }
 
@@ -237,15 +234,25 @@ class FieldDetailActivity : AppCompatActivity() {
         }.start()
     }
 
-    private fun updateDensityDisplay() {
+    private fun saveAnalysisHistory() {
         val photos = dbHelper.getPhotoTable().getByFieldId(fieldId)
         val analyzedPhotos = photos.filter { it.plantCount > 0 }
-        tvDensityResult.text = ""
 
         if (analyzedPhotos.isNotEmpty()) {
             val totalPlants = analyzedPhotos.sumOf { it.plantCount }
             val avgDensity = if (currentFieldArea > 0) totalPlants.toFloat() / currentFieldArea.toFloat() else 0f
-            tvDensityResult.text = String.format("%.1f раст/га", avgDensity)
+
+            dbHelper.getAnalysisHistoryTable().insert(fieldId, totalPlants, avgDensity)
+        }
+    }
+
+    private fun loadLastAnalysisResult() {
+        val lastAnalysis = dbHelper.getAnalysisHistoryTable().getLastByFieldId(fieldId)
+        if (lastAnalysis != null) {
+            tvDensityResult.text = String.format("Средняя густота: %.1f раст/га", lastAnalysis.density)
+            tvDensityResult.visibility = View.VISIBLE
+        } else {
+            tvDensityResult.visibility = View.GONE
         }
     }
 
@@ -429,6 +436,8 @@ class FieldDetailActivity : AppCompatActivity() {
 
             Toast.makeText(this, "Фото добавлено", Toast.LENGTH_SHORT).show()
             loadPhotos()
+
+            btnCalculateDensity.isEnabled = true
 
         } catch (e: Exception) {
             Log.e("FieldDetailActivity", "Ошибка сохранения фото", e)
