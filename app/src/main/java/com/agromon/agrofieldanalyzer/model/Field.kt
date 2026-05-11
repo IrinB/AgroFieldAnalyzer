@@ -6,5 +6,6 @@ data class Field (
     val area: Double,
     val rowSpacing: Double = 0.0,
     val excludedArea: Double = 0.0,
-    val lastCaptureDate: String? = null
+    val lastCaptureDate: String? = null,
+    val density: Float = 0f
 )

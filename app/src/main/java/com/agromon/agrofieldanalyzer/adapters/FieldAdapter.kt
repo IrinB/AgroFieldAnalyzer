@@ -36,11 +36,19 @@ class FieldAdapter(
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvFieldName: TextView = itemView.findViewById(R.id.tvFieldName)
         private val tvFieldSizeValue: TextView = itemView.findViewById(R.id.tvFieldSizeValue)
+        private val tvFieldDenseValue: TextView = itemView.findViewById(R.id.tvFieldDenseValue)
         private val btnCamera: ImageButton = itemView.findViewById(R.id.btnCamera)
 
         fun bind(field: Field) {
             tvFieldName.text = field.name
             tvFieldSizeValue.text = "${field.area} га"
+
+            if (field.density > 0) {
+                val densityInThousands = field.density / 1000f
+                tvFieldDenseValue.text = String.format("%.1f тыс. раст/га", densityInThousands)
+            } else {
+                tvFieldDenseValue.text = "—"
+            }
 
             itemView.setOnClickListener {
                 onFieldClick(field)

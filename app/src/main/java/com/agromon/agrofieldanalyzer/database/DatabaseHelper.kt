@@ -22,7 +22,7 @@ class DatabaseHelper(context: Context) :
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS ${PhotoTable.TABLE_NAME}")
         db.execSQL("DROP TABLE IF EXISTS ${FieldTable.TABLE_NAME}")
-        db.execSQL("DROP TABLE IF EXISTS ${AnalysisHistoryTable.CREATE_TABLE}")
+        db.execSQL("DROP TABLE IF EXISTS ${AnalysisHistoryTable.TABLE_NAME}")
         onCreate(db)
     }
 

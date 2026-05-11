@@ -33,7 +33,7 @@ class YoloDetector(private val context: Context) {
 
     fun initialize(): Boolean {
         return try {
-            val modelFile = File(context.filesDir, "best_float32.tflite")
+            val modelFile = File(context.filesDir, "best_float16.tflite")
 
             if (!modelFile.exists()) {
                 context.assets.open(MODEL_FILE).use { input ->
@@ -106,11 +106,10 @@ class YoloDetector(private val context: Context) {
             val confidence = sigmoid(confArray[i])
 
             if (confidence >= CONFIDENCE_THRESHOLD) {
-                // Координаты уже в пикселях 640x640, масштабируем до оригинального размера
-                val cx = cxArray[i] * scaleX
-                val cy = cyArray[i] * scaleY
-                val w = wArray[i] * scaleX
-                val h = hArray[i] * scaleY
+                val cx = cxArray[i] * INPUT_SIZE * scaleX
+                val cy = cyArray[i] * INPUT_SIZE * scaleY
+                val w = wArray[i] * INPUT_SIZE * scaleX
+                val h = hArray[i] * INPUT_SIZE * scaleY
 
                 val left = (cx - w / 2).coerceIn(0f, originalWidth.toFloat())
                 val top = (cy - h / 2).coerceIn(0f, originalHeight.toFloat())

@@ -80,25 +80,43 @@ class FieldTable(db: SQLiteDatabase) : BaseTable(db) {
         val fields = mutableListOf<Field>()
         cursor.use {
             while (it.moveToNext()) {
-                val lastCaptureIndex = it.getColumnIndex(COLUMN_LAST_CAPTURE)
-                val lastCaptureDate = if (lastCaptureIndex >= 0 && !it.isNull(lastCaptureIndex)) {
-                    it.getString(lastCaptureIndex)
-                } else {
-                    null
-                }
+                val fieldId = it.getLongSafe(COLUMN_ID)
+
+                val density = getLastDensityForField(fieldId)
+
                 fields.add(
                     Field(
-                        id = it.getLongSafe(COLUMN_ID),
+                        id = fieldId,
                         name = it.getStringSafe(COLUMN_NAME),
                         area = it.getDoubleSafe(COLUMN_AREA),
                         rowSpacing = it.getDoubleSafe(COLUMN_ROW_SPACING),
                         excludedArea = it.getDoubleSafe(COLUMN_EXCLUDED_AREA),
-                        lastCaptureDate
+                        lastCaptureDate = it.getStringSafe(COLUMN_LAST_CAPTURE).takeIf { date -> date.isNotEmpty() },
+                        density = density
                     )
                 )
             }
         }
         return fields
+    }
+
+    private fun getLastDensityForField(fieldId: Long): Float {
+        val cursor = db.query(
+            AnalysisHistoryTable.TABLE_NAME,
+            arrayOf(AnalysisHistoryTable.COLUMN_DENSITY),
+            "${AnalysisHistoryTable.COLUMN_FIELD_ID} = ?",
+            arrayOf(fieldId.toString()),
+            null, null,
+            "${AnalysisHistoryTable.COLUMN_ANALYSIS_DATE} DESC",
+            "1"
+        )
+        return cursor.use {
+            if (it.moveToFirst()) {
+                it.getFloat(it.getColumnIndexOrThrow(AnalysisHistoryTable.COLUMN_DENSITY))
+            } else {
+                0f
+            }
+        }
     }
 
     // Получение поля по ID

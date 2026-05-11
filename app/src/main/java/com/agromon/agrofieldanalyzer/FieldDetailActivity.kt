@@ -238,7 +238,6 @@ class FieldDetailActivity : AppCompatActivity() {
                 val jsonFileName = "detections_${photo.id}.json"
                 val jsonFile = File(filesDir, jsonFileName)
                 jsonFile.writeText(detector.detectionsToJson(soyaDetections))
-
                 val density = if (currentFieldArea > 0) plantCount.toFloat() / currentFieldArea.toFloat() else 0f
 
                 val photoTable = dbHelper.getPhotoTable()
